@@ -61,7 +61,6 @@ main:
 	; mov rdi, 5000
 	; call SDL_Delay
 
-	mov 	r14, 1 ; while true
 	; initalize SDL event struct
 	mov 	qword [rsp + 8], 0
 	mov 	qword [rsp + 16], 0
@@ -82,8 +81,7 @@ game_loop:
 	cmp	edi, [SDL_QUIT]
 	je	game_loop_end
 
-	cmp	r14, 1
-	je	game_loop
+	jmp	game_loop
 game_loop_end:
 
 sdl_cleanup:
