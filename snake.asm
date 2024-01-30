@@ -59,12 +59,22 @@ extern printf
 global main
 init_board:
 	; init the window and renderer
+	; set width and height
+	mov	r10d, [width]
+	mov	dword [rsp + Board.width], r10d
+	mov	r11d, [height]
+	mov	dword [rsp + Board.height], r11d
+
 	; create window
+	mov	eax, [BLOCK_SIZE]
+	imul	r10d, eax ; scale by block size
+	imul	r11d, eax
+
 	mov	edi, window_title
 	mov	esi, dword [SDL_WINDOWPOS_CENTERED]
 	mov	edx, dword [SDL_WINDOWPOS_CENTERED]
-	mov	ecx, dword [window_width]
-	mov	r8d, dword [window_height]
+	mov	ecx, r10d
+	mov	r8d, r11d
 	mov	r9d, 0
 	call	SDL_CreateWindow
 	mov 	qword [rsp + Board.window], rax ; store the window pointer
@@ -80,7 +90,13 @@ init_board:
 	cmp	rax, 0x0
 	je	handle_error 
 
+
 	jmp 	main.init_board_end
+
+update_game: 
+
+	jmp	game_loop.render_present
+
 
 main:
 	push	rbp
@@ -143,7 +159,7 @@ game_loop:
 	je	handle_keypress	
 	; update snake 
 
-render_present:
+	.render_present:
 	
 	mov	dword [rsp + Board.size + SDL_Rect.x], 10
 	mov	dword [rsp + Board.size + SDL_Rect.y], 10
@@ -207,7 +223,7 @@ show_color:
 	shr	rax, 8
 	movzx	rsi, al; g
 	call	SDL_SetRenderDrawColor
-	jmp 	render_present
+	jmp 	game_loop.render_present
 
 
 ; ---- [ SECTION RODATA ] ----
