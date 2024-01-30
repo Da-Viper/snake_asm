@@ -22,6 +22,25 @@ struc SDL_Event
 	.size:
 endstruc
 
+struc Snake
+	.head.x: resd 1
+	.head.y: resd 1
+	.head.tail: resq 20
+	.size:
+endstruc
+
+struc Board
+	.renderer: resq 1
+	.window: resq 1
+	.snake: resq 21
+	.width: resd 1
+	.height: resd 1
+	.food.x: resd 1
+	.food.y: resd 1
+	.score: resd 1
+	.size:
+endstruc
+
 	section .text
 extern SDL_Init
 extern SDL_CreateWindow
@@ -38,18 +57,8 @@ extern SDL_Quit
 extern printf
 
 global main
-main:
-	push	rbp
-	mov	rbp, rsp
-	xor	rax, rax
-	sub	rsp, 16; space for color
-	sub	rsp, SDL_Rect.size ; space for the rect
-	sub	rsp, 64 ; create stack space for SDL_Event(56)
-
-	; init SDL 
-	mov	edi, [SDL_INIT_VIDEO]
-	call	SDL_Init
-
+init_board:
+	; init the window and renderer
 	; create window
 	mov	edi, window_title
 	mov	esi, dword [SDL_WINDOWPOS_CENTERED]
@@ -58,20 +67,39 @@ main:
 	mov	r8d, dword [window_height]
 	mov	r9d, 0
 	call	SDL_CreateWindow
-	mov	r12, rax ; store the window pointer
-	cmp	r12, 0x0 ; check if it is nullptr
+	mov 	qword [rsp + Board.window], rax ; store the window pointer
+	cmp	rax, 0x0 ; check if it is nullptr
 	je 	handle_error 
 
 	; create renderer	
-	xor	rdx, rdx
-	mov	rdi, r12
+	mov	rdi, qword [rsp + Board.window]
 	mov	rsi, -1
 	mov	rdx, 0
 	call	SDL_CreateRenderer
-	mov	r13, rax ; store the renderer pointer
-	cmp	r13, 0x0
+	mov	qword [rsp + Board.renderer], rax ; store the renderer pointer
+	cmp	rax, 0x0
 	je	handle_error 
 
+	jmp 	main.init_board_end
+
+main:
+	push	rbp
+	mov	rbp, rsp
+	xor	rax, rax
+	sub	rsp, 16; space for color
+	sub	rsp, SDL_Rect.size ; space for the rect
+	sub	rsp, 64 ; create stack space for SDL_Event(56)
+	sub 	rsp, 192 ; space for the board
+
+	; init SDL 
+	mov	edi, [SDL_INIT_VIDEO]
+	call	SDL_Init
+
+	; init board
+	jmp 	init_board
+	.init_board_end: 
+
+	mov 	r13, qword [rsp + Board.renderer]
 	mov 	rdi, r13
 	call 	SDL_RenderClear
 
@@ -90,35 +118,39 @@ main:
 	; call SDL_Delay
 
 	; initalize SDL event struct
-	mov 	qword [rsp + 8], 0
-	mov 	qword [rsp + 16], 0
-	mov 	qword [rsp + 24], 0
-	mov 	qword [rsp + 32], 0
-	mov 	qword [rsp + 40], 0
-	mov 	qword [rsp + 48], 0
-	mov 	qword [rsp + 56], 0
+	mov 	qword [rsp + Board.size + 16 + 8], 0
+	mov 	qword [rsp + Board.size + 16 + 16], 0
+	mov 	qword [rsp + Board.size + 16 + 24], 0
+	mov 	qword [rsp + Board.size + 16 + 32], 0
+	mov 	qword [rsp + Board.size + 16 + 40], 0
+	mov 	qword [rsp + Board.size + 16 + 48], 0
+	mov 	qword [rsp + Board.size + 16 + 56], 0
+
+	; draw snake 
+	; draw food
 
 game_loop:
-	lea	rdi, [rsp + 8]
+	lea	rdi, [rsp + Board.size + 16 + 8]
 	call	SDL_PollEvent ; poll events
 	cmp	eax, 0
 	jz	game_loop
 
-	mov	r10d, [rsp + 8] 
+	mov	r10d, [rsp + Board.size + 16 + 8] 
 	cmp	r10d, [SDL_QUIT] ; if quit is pressed
 	je	game_loop_end
 
 	cmp	r10d, [SDL_KEYDOWN] 
 	je	handle_keypress	
+	; update snake 
 
 render_present:
 	
-	mov	dword [rsp + 64 + SDL_Rect.x], 10
-	mov	dword [rsp + 64 + SDL_Rect.y], 10
-	mov	dword [rsp + 64 + SDL_Rect.w], 100
-	mov	dword [rsp + 64 + SDL_Rect.h], 100
+	mov	dword [rsp + Board.size + SDL_Rect.x], 10
+	mov	dword [rsp + Board.size + SDL_Rect.y], 10
+	mov	dword [rsp + Board.size + SDL_Rect.w], 100
+	mov	dword [rsp + Board.size + SDL_Rect.h], 100
 	mov	rdi, r13
-	lea	rsi, [rsp + 64]
+	lea	rsi, [rsp + Board.size]
 	call 	SDL_RenderFillRect
 
 	mov 	rdi, r13
@@ -127,12 +159,13 @@ render_present:
 game_loop_end:
 
 sdl_cleanup:
-	mov	rdi, r12
+	mov	rdi, qword [rsp + Board.window]
 	call	SDL_DestroyWindow
 	call	SDL_Quit
 
 main_function_end:
 	xor	rax, rax
+	add	rsp, 192
 	add	rsp, 64
 	add	rsp, SDL_Rect.size
 	add	rsp, 16
@@ -147,7 +180,7 @@ handle_error:
 	jmp	main_function_end
 
 handle_keypress:
-	mov 	r10d,[rsp + 8 + SDL_Event.sym]
+	mov 	r10d,[rsp + Board.size + 16 + 8 + SDL_Event.sym]
 	cmp	r10d, [SDLK_UP]
 	mov	eax, [RED]
 	je	.set_colour
@@ -189,10 +222,14 @@ SDLK_DOWN: dd 0x40000051
 SDLK_UP: dd 0x40000052
 SDL_KEYDOWN: dd 0x300
 
+; GAME Constants
+BLOCK_SIZE: dd 20
 RED: dq 0xff0000ff
 GREEN: dq 0x00ff00ff
 BLUE: dq 0x0000ffff
 YELLOW: dq 0xffff00ff
+width: dd 40
+height: dd 30
 window_width: dd 800
 window_height: dd 600
 window_title: db "This is the assembly code", 0
