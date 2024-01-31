@@ -53,8 +53,16 @@ extern SDL_RenderFillRect
 extern SDL_GetError
 extern SDL_PollEvent
 extern SDL_DestroyWindow
+extern SDL_Delay
 extern SDL_Quit
+
+
+; C functions
+extern puts
 extern printf
+extern srand
+extern time
+extern rand
 
 global main
 init_board:
@@ -90,7 +98,6 @@ init_board:
 	cmp	rax, 0x0
 	je	handle_error 
 
-
 	jmp 	main.init_board_end
 
 update_game: 
@@ -107,6 +114,12 @@ main:
 	sub	rsp, 64 ; create stack space for SDL_Event(56)
 	sub 	rsp, 192 ; space for the board
 
+	; seed rand
+	mov 	rdi, 0x0
+	call 	time
+	mov	rdi, rax
+	call	srand
+
 	; init SDL 
 	mov	edi, [SDL_INIT_VIDEO]
 	call	SDL_Init
@@ -115,23 +128,6 @@ main:
 	jmp 	init_board
 	.init_board_end: 
 
-	mov 	r13, qword [rsp + Board.renderer]
-	mov 	rdi, r13
-	call 	SDL_RenderClear
-
-	; set renderer color 
-	mov	rdi, r13 
-	mov	esi, 0
-	xor 	edx, edx
-	mov 	ecx, 0xff
-	mov 	r8d, 0xff
-	call 	SDL_SetRenderDrawColor
-
-
-
-	; delay for 5 seconds
-	; mov rdi, 5000
-	; call SDL_Delay
 
 	; initalize SDL event struct
 	mov 	qword [rsp + Board.size + 16 + 8], 0
@@ -142,34 +138,35 @@ main:
 	mov 	qword [rsp + Board.size + 16 + 48], 0
 	mov 	qword [rsp + Board.size + 16 + 56], 0
 
-	; draw snake 
-	; draw food
 
 game_loop:
-	lea	rdi, [rsp + Board.size + 16 + 8]
-	call	SDL_PollEvent ; poll events
-	cmp	eax, 0
-	jz	game_loop
+	; set renderer color 
+	mov	rdi, qword [rsp + Board.renderer] 
+	xor	esi, esi
+	xor 	edx, edx
+	xor 	ecx, ecx
+	mov 	r8d, 0xff
+	call 	SDL_SetRenderDrawColor
 
-	mov	r10d, [rsp + Board.size + 16 + 8] 
-	cmp	r10d, [SDL_QUIT] ; if quit is pressed
-	je	game_loop_end
+	mov	rdi, qword [rsp + Board.renderer]
+	call 	SDL_RenderClear
 
-	cmp	r10d, [SDL_KEYDOWN] 
-	je	handle_keypress	
-	; update snake 
+	jmp handle_events_loop
+	.handle_events_loop_end:
 
 	.render_present:
-	
-	mov	dword [rsp + Board.size + SDL_Rect.x], 10
-	mov	dword [rsp + Board.size + SDL_Rect.y], 10
-	mov	dword [rsp + Board.size + SDL_Rect.w], 100
-	mov	dword [rsp + Board.size + SDL_Rect.h], 100
-	mov	rdi, r13
-	lea	rsi, [rsp + Board.size]
-	call 	SDL_RenderFillRect
 
-	mov 	rdi, r13
+	lea	rdi, qword [rsp + Board] 
+	call 	create_food
+
+	lea	rdi, qword [rsp + Board] 
+	mov	esi, [BLOCK_SIZE]
+	call 	draw_food	
+
+	mov 	rdi, 300
+	call  	SDL_Delay
+
+	mov	rdi, qword [rsp + Board.renderer]
 	call 	SDL_RenderPresent
 	jmp	game_loop
 game_loop_end:
@@ -185,8 +182,24 @@ main_function_end:
 	add	rsp, 64
 	add	rsp, SDL_Rect.size
 	add	rsp, 16
-	leave
+	pop	rbp
 	ret
+
+handle_events_loop:
+	lea	rdi, [rsp + Board.size + 16 + 8]
+	call	SDL_PollEvent ; poll events
+	cmp	eax, 0
+	jz	game_loop.handle_events_loop_end
+
+	mov	r10d, [rsp + Board.size + 16 + 8] 
+	cmp	r10d, [SDL_QUIT] ; if quit is pressed
+	je	game_loop_end
+
+	; cmp	r10d, [SDL_KEYDOWN] 
+	; je	handle_keypress	
+
+	jmp	handle_events_loop
+
 
 handle_error:
 	call	SDL_GetError
@@ -209,22 +222,104 @@ handle_keypress:
 	cmp	r10d, [SDLK_RIGHT]
 	mov	eax, [YELLOW]
 	je	.set_colour
-	mov	eax, 0x111111ff
+	mov	eax, 0x808080ff
 	.set_colour:
 
 
-show_color:	
-	mov	rdi, r13 ; renderer
-	movzx	r8d, al ; a
-	shr	rax, 8
-	movzx	ecx, al ; b
-	shr	rax, 8
-	movzx	edx, al; r
-	shr	rax, 8
-	movzx	rsi, al; g
-	call	SDL_SetRenderDrawColor
-	jmp 	game_loop.render_present
+; show_color:	
+; 	mov	rdi, r13 ; renderer
+; 	movzx	r8d, al ; a
+; 	shr	rax, 8
+; 	movzx	ecx, al ; b
+; 	shr	rax, 8
+; 	movzx	edx, al; r
+; 	shr	rax, 8
+; 	movzx	rsi, al; g
+; 	call	SDL_SetRenderDrawColor
+; 	jmp 	game_loop.render_present
 
+; function to create the food from random numbers
+; rdi: Board *
+create_food: 
+	push	rbp
+	mov	rbp, rsp
+	; compute rand from width and height then store it 
+	; mov the board * 
+	mov	r12, rdi
+
+	call	rand
+	xor	edx, edx
+	mov 	ecx, dword [ r12 + Board.width]
+	div	ecx
+	mov 	dword [ r12 + Board.food.x], edx
+	mov	r13d, edx
+
+	call	rand
+	xor	edx, edx
+	mov 	ecx, dword [ r12 + Board.height]
+	div	ecx
+	mov 	dword [ r12 + Board.food.y], edx
+
+	; mov   	rdi, str_create_point
+	; mov	esi, dword [r12 + Board.food.x]
+	; mov	edx, dword [r12 + Board.food.y]
+	; xor	ecx, ecx
+	; call	printf
+
+	pop 	rbp
+	ret 
+
+; function to draw the food
+; rdi: Board * 
+; esi: block_size
+draw_food:
+	push	rbp
+	mov	rbp, rsp
+	sub 	rsp, SDL_Rect.size
+
+	mov 	r12, rdi
+	mov	r13d, esi
+
+	mov	rdi, qword [r12 + Board.renderer] 
+	xor	esi, esi
+	xor 	edx, edx
+	mov 	ecx, 255
+	mov 	r8d, 0xff
+	call 	SDL_SetRenderDrawColor
+
+	mov 	r10d, dword [r12 + Board.food.x]
+	mov 	r11d, dword [r12 + Board.food.y]
+
+	mov	esi, r13d
+	imul	r10d, esi
+	imul	r11d, esi
+
+	mov	dword [rsp + SDL_Rect.x], r10d
+	mov	dword [rsp + SDL_Rect.y], r11d
+	mov	[rsp + SDL_Rect.w], esi
+	mov	[rsp + SDL_Rect.h], esi
+
+	mov	rdi, qword [r12 + Board.renderer]
+	lea	rsi, qword [rsp]
+	; call	SDL_RenderDrawRect
+	call	SDL_RenderFillRect
+
+	; mov   	rdi, str_draw_point
+	; mov	esi, dword [ r12 + Board.food.x]
+	; mov	edx, dword [ r12 + Board.food.y]
+	; xor	ecx, ecx
+	; call	printf
+
+	add	rsp, SDL_Rect.size
+	pop	rbp
+	ret
+
+; Function to draw snake
+; rdi: Board *
+; esi: block_size
+; draw_snake:
+; 	push	rbp
+; 	mov	rbp, rsp
 
 ; ---- [ SECTION RODATA ] ----
 	section .rodata
@@ -251,3 +346,5 @@ window_height: dd 600
 window_title: db "This is the assembly code", 0
 hello: db "Hello world", 0xa, 0
 str_error: db "Could not create sdl window: %s", 0xa, 0
+str_create_point: db "Creating point at %d, %d", 0xa, 0
+str_draw_point: db "Drawing point at %d, %d", 0xa, 0
