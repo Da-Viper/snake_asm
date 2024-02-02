@@ -1,68 +1,10 @@
-	section .bss
-struc SDL_Rect
-	.x: resd 1
-	.y: resd 1
-	.w: resd 1
-	.h: resd 1
-	.size:
-endstruc
+        section .text
 
-struc SDL_Color
-	.r: resb 1
-	.g: resb 1
-	.b: resb 1
-	.a: resb 1
-	.size:
-endstruc
+%include "snake.inc"
+extern draw_food
+extern init_snake
+extern print_snake
 
-struc SDL_Event
-	.type: resd 1
-	.space: resd 4
-	.sym: resd 1
-	.size:
-endstruc
-
-struc Snake
-	.head.x: resd 1
-	.head.y: resd 1
-	.head.tail: resq 20
-	.size:
-endstruc
-
-struc Board
-	.renderer: resq 1
-	.window: resq 1
-	.snake: resq 21
-	.width: resd 1
-	.height: resd 1
-	.food.x: resd 1
-	.food.y: resd 1
-	.score: resd 1
-	.size:
-endstruc
-
-	section .text
-extern SDL_Init
-extern SDL_CreateWindow
-extern SDL_CreateRenderer
-extern SDL_SetRenderDrawColor
-extern SDL_RenderClear
-extern SDL_RenderPresent
-extern SDL_RenderDrawRect
-extern SDL_RenderFillRect
-extern SDL_GetError
-extern SDL_PollEvent
-extern SDL_DestroyWindow
-extern SDL_Delay
-extern SDL_Quit
-
-
-; C functions
-extern puts
-extern printf
-extern srand
-extern time
-extern rand
 
 global main
 init_board:
@@ -89,14 +31,14 @@ init_board:
 	cmp	rax, 0x0 ; check if it is nullptr
 	je 	handle_error 
 
-	; create renderer	
-	mov	rdi, qword [rsp + Board.window]
-	mov	rsi, -1
-	mov	rdx, 0
-	call	SDL_CreateRenderer
-	mov	qword [rsp + Board.renderer], rax ; store the renderer pointer
-	cmp	rax, 0x0
-	je	handle_error 
+        ; create renderer	
+        mov	rdi, qword [rsp + Board.window]
+        mov	esi, -1
+        mov	edx, 0
+        call	SDL_CreateRenderer
+        mov	qword [rsp + Board.renderer], rax ; store the renderer pointer
+        cmp	rax, 0x0
+        je	handle_error 
 
 	jmp 	main.init_board_end
 
@@ -112,7 +54,7 @@ main:
 	sub	rsp, 16; space for color
 	sub	rsp, SDL_Rect.size ; space for the rect
 	sub	rsp, 64 ; create stack space for SDL_Event(56)
-	sub 	rsp, 192 ; space for the board
+	sub 	rsp, 784 ; space for the board
 
 	; seed rand
 	mov 	rdi, 0x0
@@ -138,6 +80,12 @@ main:
 	mov 	qword [rsp + Board.size + 16 + 48], 0
 	mov 	qword [rsp + Board.size + 16 + 56], 0
 
+
+        lea	rdi, qword [rsp + Board] 
+        call    init_snake
+
+        lea	rdi, qword [rsp + Board] 
+        call    print_snake
 
 game_loop:
 	; set renderer color 
@@ -178,7 +126,7 @@ sdl_cleanup:
 
 main_function_end:
 	xor	rax, rax
-	add	rsp, 192
+	add	rsp, 784
 	add	rsp, 64
 	add	rsp, SDL_Rect.size
 	add	rsp, 16
@@ -269,51 +217,6 @@ create_food:
 	pop 	rbp
 	ret 
 
-; function to draw the food
-; rdi: Board * 
-; esi: block_size
-draw_food:
-	push	rbp
-	mov	rbp, rsp
-	sub 	rsp, SDL_Rect.size
-
-	mov 	r12, rdi
-	mov	r13d, esi
-
-	mov	rdi, qword [r12 + Board.renderer] 
-	xor	esi, esi
-	xor 	edx, edx
-	mov 	ecx, 255
-	mov 	r8d, 0xff
-	call 	SDL_SetRenderDrawColor
-
-	mov 	r10d, dword [r12 + Board.food.x]
-	mov 	r11d, dword [r12 + Board.food.y]
-
-	mov	esi, r13d
-	imul	r10d, esi
-	imul	r11d, esi
-
-	mov	dword [rsp + SDL_Rect.x], r10d
-	mov	dword [rsp + SDL_Rect.y], r11d
-	mov	[rsp + SDL_Rect.w], esi
-	mov	[rsp + SDL_Rect.h], esi
-
-	mov	rdi, qword [r12 + Board.renderer]
-	lea	rsi, qword [rsp]
-	; call	SDL_RenderDrawRect
-	call	SDL_RenderFillRect
-
-	; mov   	rdi, str_draw_point
-	; mov	esi, dword [ r12 + Board.food.x]
-	; mov	edx, dword [ r12 + Board.food.y]
-	; xor	ecx, ecx
-	; call	printf
-
-	add	rsp, SDL_Rect.size
-	pop	rbp
-	ret
-
 ; Function to draw snake
 ; rdi: Board *
 ; esi: block_size
@@ -322,7 +225,7 @@ draw_food:
 ; 	mov	rbp, rsp
 
 ; ---- [ SECTION RODATA ] ----
-	section .rodata
+        section .rodata
 ;SDL Constants
 SDL_INIT_VIDEO:	dd 0x000020
 SDL_WINDOWPOS_CENTERED: dd 0x2FFF0000
@@ -332,6 +235,7 @@ SDLK_LEFT: dd 0x40000050
 SDLK_DOWN: dd 0x40000051
 SDLK_UP: dd 0x40000052
 SDL_KEYDOWN: dd 0x300
+SDL_WINDOW_ALLOW_HIGIDPI: dd 0x2000
 
 ; GAME Constants
 BLOCK_SIZE: dd 20
