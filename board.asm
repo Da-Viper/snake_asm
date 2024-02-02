@@ -1,8 +1,8 @@
 %include "snake.inc"
         section .text
-global draw_food
-global init_snake
-global print_snake
+global  draw_food
+global  init_snake
+global  print_snake
 
 
 ; create the snake from the middle of the scren extending to the left
@@ -11,7 +11,7 @@ init_snake:
         push    rbp
         mov     rbp, rsp
         mov     eax, dword [rdi + Board.width]
-        shr     eax, 1 
+        shr     eax, 1
         mov     dword [rdi + Board.snake + Snake.head.x], eax
         mov     edx, dword [rdi + Board.height]
         shr     edx, 1
@@ -32,7 +32,7 @@ init_snake:
         jmp     .set_tail
         .end_init_snake:
 
-        mov     dword [rdi + Board.snake + Snake.length], ecx 
+        mov     dword [rdi + Board.snake + Snake.length], ecx
         pop     rbp
         ret
 
@@ -41,7 +41,7 @@ print_snake:
         push    rbp
         mov     rbp, rsp
         ; get the length 
-        mov     r14d, dword [ rdi + Board.snake + Snake.length] 
+        mov     r14d, dword [ rdi + Board.snake + Snake.length]
         ; loop through it and print the tail
         mov     r12, rdi
         xor     r13, r13
@@ -57,7 +57,7 @@ print_snake:
         call    printf
 
         add     r13d, 1
-        jmp .loop
+        jmp     .loop
         .end_loop:
 
         pop     rbp
@@ -74,7 +74,7 @@ draw_food:
         mov     r12, rdi
         push    rsi
 
-        mov     rdi, qword [r12 + Board.renderer] 
+        mov     rdi, qword [r12 + Board.renderer]
         xor     esi, esi
         xor     edx, edx
         mov     ECX, 255
@@ -87,27 +87,28 @@ draw_food:
         pop     rsi
         imul    r10d, esi
         imul    r11d, esi
-        
+
         mov     dword [rsp + SDL_Rect.x], r10d
         mov     dword [rsp + SDL_Rect.y], r11d
         mov     [rsp + SDL_Rect.w], esi
         mov     [rsp + SDL_Rect.h], esi
-        
+
         mov     rdi, qword [r12 + Board.renderer]
         lea     rsi, qword [rsp]
         ; call SDL_RenderDrawRect
         call    SDL_RenderFillRect
-        
+
         ; mov     rdi, str_draw_point
         ; mov	esi, dword [ r12 + Board.food.x]
         ; mov	edx, dword [ r12 + Board.food.y]
         ; xor	ecx, ecx
         ; call	printf
-        
+
         add     rsp, SDL_Rect.size
         pop     rbp
         ret
 
 
         section .rodata
-print_snake_str: db "(%d, %d),", 0xa
+print_snake_str:
+        db      "(%d, %d),", 0xa
