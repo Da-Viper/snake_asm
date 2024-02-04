@@ -97,12 +97,11 @@ update_snake:
 draw_block:
         push    rbp
         mov     rbp, rsp 
-        sub     rsp, SDL_Rect.size
         push    r12
-        mov     r12, rdi
         push    rdx
         push    rsi
 
+        mov     r12, rdi
         mov     rax, rcx
         mov     r10, rax
         shr     rax, 16
@@ -121,6 +120,8 @@ draw_block:
         pop     rdx
         imul    r10d, edx
         imul    r11d, edx
+
+        sub     rsp, SDL_Rect.size
         mov     dword [rsp + SDL_Rect.x], r10d
         mov     dword [rsp + SDL_Rect.y], r11d
         mov     dword [rsp + SDL_Rect.w], edx
@@ -130,6 +131,7 @@ draw_block:
         lea     rsi, [rsp + SDL_Rect]
         call    SDL_RenderFillRect
 
+        add     rsp, SDL_Rect.size
         pop     r12
         leave
         ret

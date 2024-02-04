@@ -96,6 +96,9 @@ main:
         call    init_snake
 
         lea     rdi, qword [rsp + Board]
+        call    create_food
+
+        lea     rdi, qword [rsp + Board]
         call    print_snake
 
 game_loop:
@@ -115,20 +118,8 @@ game_loop:
 
         .render_present:
 
-        lea     rdi, qword [rsp + Board]
-        call    create_food
-
-        mov     rdi, qword [rsp + Board.renderer]
-        mov     rsi, [rsp + Board.food]
-        mov     edx, [BLOCK_SIZE]
-        mov     ecx, 0x0000ffff
-        call    draw_block
-
         lea     rdi, [rsp + Board]
-        call    update_snake
-
-        lea     rdi, [rsp + Board]
-        call    draw_snake
+        call    update_state
 
         mov     rdi, 100
         call    SDL_Delay
@@ -219,22 +210,41 @@ create_food:
         div     ecx
         mov     dword [ r12 + Board.food.y], edx
 
-	; mov   	rdi, str_create_point
-	; mov	esi, dword [r12 + Board.food.x]
-	; mov	edx, dword [r12 + Board.food.y]
-	; xor	ecx, ecx
-	; call	printf
-
         pop     r13
         pop     r12
         ret
 
-; Function to draw snake
-; rdi: Board *
-; esi: block_size
-; draw_snake:
-; 	push	rbp
-; 	mov	rbp, rsp
+; rdi Board *
+update_state:
+        push    rbp
+        mov     rbp, rsp
+        push    r12
+        mov     r12, rdi
+        ; update snake
+        lea     rdi, [r12 + Board]
+        call    update_snake
+
+        ; update food 
+
+
+
+        ; check collision
+
+        ; draw food
+        mov     rdi, qword [r12 + Board.renderer]
+        mov     rsi, [r12 + Board.food]
+        mov     edx, [BLOCK_SIZE]
+        mov     ecx, 0x0000ffff
+        call    draw_block
+
+        ; draw snake 
+        lea     rdi, [r12 + Board]
+        call    draw_snake
+
+        pop     r12
+
+        leave
+        ret
 
 ; ---- [ SECTION RODATA ] ----
         section .rodata
