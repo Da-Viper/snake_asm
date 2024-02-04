@@ -1,6 +1,8 @@
 %include "snake.inc"
         section .text
 global  draw_food
+global  draw_block
+global  draw_snake
 global  init_snake
 global  print_snake
 
@@ -63,6 +65,84 @@ print_snake:
         pop     rbp
         ret
 
+; rdi   SDL_Renderer *
+; rsi   Point
+; rdx   block_size
+; rcx   SDL_Color
+draw_block:
+        push    rbp
+        mov     rbp, rsp 
+        sub     rsp, SDL_Rect.size
+        push    r12
+        mov     r12, rdi
+        push    rdx
+        push    rsi
+
+        mov     rax, rcx
+        mov     r10, rax
+        shr     rax, 16
+        movzx   esi, ah
+        movzx   edx, al   
+        movzx   r8d, r10b
+        shr     r10d, 8
+        movzx   ecx, r10b
+        call    SDL_SetRenderDrawColor
+
+        pop     rsi
+        mov     r10d, esi
+        shr     rsi, 32
+        mov     r11d, esi
+
+        pop     rdx
+        imul    r10d, edx
+        imul    r11d, edx
+        mov     dword [rsp + SDL_Rect.x], r10d
+        mov     dword [rsp + SDL_Rect.y], r11d
+        mov     dword [rsp + SDL_Rect.w], edx
+        mov     dword [rsp + SDL_Rect.h], edx
+
+        mov     rdi, r12
+        lea     rsi, [rsp + SDL_Rect]
+        call    SDL_RenderFillRect
+
+        pop     r12
+        leave
+        ret
+
+; rdi Board *
+draw_snake:
+        push    r15
+        push    r14
+        push    r13
+
+        mov     r14, rdi
+        mov     r13d, dword [r14 + Board.snake + Snake.length]
+        xor     r15, r15
+        .loop:
+        cmp     r15d, r13d
+        je      .end_loop
+
+        mov     rdi, [r14 + Board.renderer]
+        mov     rsi, [r14 + Board.snake + Snake.tail + (r15 * Point.size)]
+        mov     edx, 20
+        mov     ecx, 0xffff00ff
+        call    draw_block
+
+        add     r15d, 1
+        jmp     .loop
+        .end_loop:
+
+        mov     rsi, qword [r14 + Board.snake + Snake.tail + (0 * Point.size)]
+        mov     edx, dword [r14 + Board.snake + Snake.tail + Point.y]
+        mov     rdi, print_snake_str
+        call    printf
+
+        pop     r13
+        pop     r14
+        pop     r15
+        ret
+
+
 ; function to draw the food
 ; rdi: Board * 
 ; esi: block_size
@@ -105,7 +185,7 @@ draw_food:
         ; call	printf
 
         add     rsp, SDL_Rect.size
-        pop     rbp
+        leave
         ret
 
 

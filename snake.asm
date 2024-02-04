@@ -2,6 +2,8 @@
 
         section .text
 extern  draw_food
+extern  draw_block
+extern  draw_snake
 extern  init_snake
 extern  print_snake
 
@@ -55,7 +57,7 @@ main:
         sub     rsp, SDL_Rect.size ; space for the rect
         sub     rsp, 64 ; create stack space for SDL_Event(56)
         sub     rsp, 784 ; space for the board
-
+ 
 	; seed rand
         mov     rdi, 0x0
         call    time
@@ -107,9 +109,14 @@ game_loop:
         lea     rdi, qword [rsp + Board]
         call    create_food
 
-        lea     rdi, qword [rsp + Board]
-        mov     esi, [BLOCK_SIZE]
-        call    draw_food
+        mov     rdi, qword [rsp + Board.renderer]
+        mov     rsi, [rsp + Board.food]
+        mov     edx, [BLOCK_SIZE]
+        mov     ecx, 0x0000ffff
+        call    draw_block
+
+        lea     rdi, [rsp + Board]
+        call    draw_snake
 
         mov     rdi, 300
         call    SDL_Delay
@@ -174,25 +181,25 @@ handle_keypress:
         .set_colour:
 
 
-; show_color:	
-; 	mov	rdi, r13 ; renderer
-; 	movzx	r8d, al ; a
-; 	shr	rax, 8
-; 	movzx	ecx, al ; b
-; 	shr	rax, 8
-; 	movzx	edx, al; r
-; 	shr	rax, 8
-; 	movzx	rsi, al; g
-; 	call	SDL_SetRenderDrawColor
-; 	jmp 	game_loop.render_present
+show_color:	
+	mov	rdi, r13 ; renderer
+	movzx	r8d, al ; a
+	shr	rax, 8
+	movzx	ecx, al ; b
+	shr	rax, 8
+	movzx	edx, al; r
+	shr	rax, 8
+	movzx	rsi, al; g
+	call	SDL_SetRenderDrawColor
+	jmp 	game_loop.render_present
 
 ; function to create the food from random numbers
 ; rdi: Board *
 create_food:
-        push    rbp
-        mov     rbp, rsp
 	; compute rand from width and height then store it 
 	; mov the board * 
+        push    r12
+        push    r13
         mov     r12, rdi
 
         call    rand
@@ -214,7 +221,8 @@ create_food:
 	; xor	ecx, ecx
 	; call	printf
 
-        pop     rbp
+        pop     r13
+        pop     r12
         ret
 
 ; Function to draw snake
