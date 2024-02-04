@@ -1,11 +1,13 @@
 %include "snake.inc"
         section .text
+global  create_food
 global  draw_food
 global  draw_block
 global  draw_snake
 global  init_snake
 global  print_snake
 global  set_direction
+global  update_food
 global  update_snake
 
 
@@ -65,6 +67,49 @@ print_snake:
         .end_loop:
 
         pop     rbp
+        ret
+
+; function to create the food from random numbers
+; rdi: Board *
+create_food:
+	; compute rand from width and height then store it 
+	; mov the board * 
+        push    r12
+        push    r13
+        mov     r12, rdi
+
+        call    rand
+        xor     edx, edx
+        mov     ecx, dword [ r12 + Board.width]
+        div     ecx
+        mov     dword [ r12 + Board.food.x], edx
+        mov     r13d, edx
+
+        call    rand
+        xor     edx, edx
+        mov     ecx, dword [ r12 + Board.height]
+        div     ecx
+        mov     dword [ r12 + Board.food.y], edx
+
+        pop     r13
+        pop     r12
+        ret
+
+; rdi Board *
+update_food:
+        ; check if food colides with the snake head
+        ; if yes update food location and increment score
+        mov     rsi, qword [rdi + Board.snake + Snake.head]
+        mov     rdx, qword [rdi + Board.food]
+        xor     rax, rax
+        cmp     rsi, rdx
+        jne     .end
+
+        add     dword [rdi + Board.score], 1
+        add     dword [rdi + Board.snake + Snake.length], 1
+        call    create_food
+
+        .end:
         ret
 
 ; rdi Board *
@@ -146,12 +191,6 @@ draw_snake:
         mov     r13d, dword [r14 + Board.snake + Snake.length]
         xor     r15, r15
 
-        ; draw snake head 
-        mov     rdi, [r14 + Board.renderer]
-        mov     rsi, [r14 + Board.snake + Snake.head]
-        mov     edx, 20
-        mov     ecx, 0xffff00ff
-        call    draw_block
 
         ; draw tail
         .loop:
@@ -172,6 +211,13 @@ draw_snake:
         mov     edx, dword [r14 + Board.snake + Snake.tail + Point.y]
         mov     rdi, print_snake_str
         call    printf
+
+        ; draw snake head 
+        mov     rdi, [r14 + Board.renderer]
+        mov     rsi, [r14 + Board.snake + Snake.head]
+        mov     edx, 20
+        mov     ecx, 0xffff00ff
+        call    draw_block
 
         pop     r13
         pop     r14

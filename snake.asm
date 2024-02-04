@@ -1,12 +1,14 @@
 %include "snake.inc"
 
         section .text
+extern  create_food
 extern  draw_food
 extern  draw_block
 extern  draw_snake
 extern  init_snake
 extern  print_snake
 extern  set_direction
+extern  update_food
 extern  update_snake
 
 
@@ -50,6 +52,8 @@ init_board:
         lea     rdi, [rsp + Board]
         mov     esi, 4
         call    set_direction
+
+        mov     dword [rsp + Board.score], 0
 
         jmp     main.init_board_end
 
@@ -188,47 +192,27 @@ handle_keypress:
         call    set_direction
 	jmp 	game_loop.render_present
 
-; function to create the food from random numbers
-; rdi: Board *
-create_food:
-	; compute rand from width and height then store it 
-	; mov the board * 
-        push    r12
-        push    r13
-        mov     r12, rdi
-
-        call    rand
-        xor     edx, edx
-        mov     ecx, dword [ r12 + Board.width]
-        div     ecx
-        mov     dword [ r12 + Board.food.x], edx
-        mov     r13d, edx
-
-        call    rand
-        xor     edx, edx
-        mov     ecx, dword [ r12 + Board.height]
-        div     ecx
-        mov     dword [ r12 + Board.food.y], edx
-
-        pop     r13
-        pop     r12
-        ret
-
 ; rdi Board *
 update_state:
         push    rbp
         mov     rbp, rsp
         push    r12
         mov     r12, rdi
+
+        ; check collision
+        ; collides with the walls 
+        ; collides with itself
+
         ; update snake
         lea     rdi, [r12 + Board]
         call    update_snake
 
         ; update food 
+        lea     rdi, [r12 + Board]
+        call    update_food
 
 
 
-        ; check collision
 
         ; draw food
         mov     rdi, qword [r12 + Board.renderer]
