@@ -143,6 +143,15 @@ draw_snake:
         mov     r14, rdi
         mov     r13d, dword [r14 + Board.snake + Snake.length]
         xor     r15, r15
+
+        ; draw snake head 
+        mov     rdi, [r14 + Board.renderer]
+        mov     rsi, [r14 + Board.snake + Snake.head]
+        mov     edx, 20
+        mov     ecx, 0xffff00ff
+        call    draw_block
+
+        ; draw tail
         .loop:
         cmp     r15d, r13d
         je      .end_loop
@@ -150,7 +159,7 @@ draw_snake:
         mov     rdi, [r14 + Board.renderer]
         mov     rsi, [r14 + Board.snake + Snake.tail + (r15 * Point.size)]
         mov     edx, 20
-        mov     ecx, 0xffff00ff
+        mov     ecx, 0x008080ff
         call    draw_block
 
         add     r15d, 1
