@@ -5,6 +5,8 @@ global  draw_block
 global  draw_snake
 global  init_snake
 global  print_snake
+global  set_direction
+global  update_snake
 
 
 ; create the snake from the middle of the scren extending to the left
@@ -26,7 +28,7 @@ init_snake:
         je      .end_init_snake
 
         lea     r13, dword [rcx + Point.size]
-        sub     edx, 1
+        sub     eax, 1
         mov     dword [rdi + Board.snake + Snake.tail + (rcx * Point.size) + Point.x], eax
         mov     dword [rdi + Board.snake + Snake.tail + (rcx * Point.size) + Point.y], edx
 
@@ -63,6 +65,29 @@ print_snake:
         .end_loop:
 
         pop     rbp
+        ret
+
+; rdi Board *
+update_snake:
+        mov     rsi, qword [rdi + Board.direction]
+        mov     edx, dword [rdi + Board.snake + Snake.length] ; size
+        sub     edx, 1
+
+        .loop:
+        cmp     edx, 0
+        jl      .loop_end
+
+        mov     rcx, qword [rdi + Board.snake + Snake.head + (rdx * Point.size) ] ; save the current
+        mov     qword [rdi + Board.snake + Snake.head + ((rdx + 1)  * Point.size) ], rcx ; move to next
+
+        sub     edx, 1
+        jmp     .loop
+        .loop_end:
+
+        add     dword [rdi + Board.snake + Snake.head.x], esi
+        shr     rsi, 32
+        add     dword [rdi + Board.snake + Snake.head.y], esi
+
         ret
 
 ; rdi   SDL_Renderer *
@@ -142,6 +167,24 @@ draw_snake:
         pop     r15
         ret
 
+; rdi Board *
+; rsi byte [ 0,1, 2, 3] up, down, left, right
+set_direction:
+        cmp     esi, 4
+        jg      .end
+        cmp     esi, 1
+        jl      .end
+
+        sub     esi, 1
+        mov     edx, dword [snake_direction + (rsi * Point.size) + Point.x]
+        mov     ecx, dword [snake_direction + (rsi * Point.size) + Point.y]
+        mov     [rdi + Board.direction.x], edx
+        mov     [rdi + Board.direction.y], ecx
+
+        .end:
+        ret
+
+
 
 ; function to draw the food
 ; rdi: Board * 
@@ -192,3 +235,13 @@ draw_food:
         section .rodata
 print_snake_str:
         db      "(%d, %d),", 0xa
+
+snake_direction:  ; x , y 
+        dd      0
+        dd      -1
+        dd      0
+        dd      1
+        dd      -1
+        dd      0
+        dd      1
+        dd      0

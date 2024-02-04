@@ -6,6 +6,8 @@ extern  draw_block
 extern  draw_snake
 extern  init_snake
 extern  print_snake
+extern  set_direction
+extern  update_snake
 
 
 global  main
@@ -41,6 +43,13 @@ init_board:
         mov     qword [rsp + Board.renderer], rax ; store the renderer pointer
         cmp     rax, 0x0
         je      handle_error
+
+        ; set direction right
+        ; mov     dword [rsp + Board.direction.x], 1
+        ; mov     dword [rsp + Board.direction.y], 0
+        lea     rdi, [rsp + Board]
+        mov     esi, 4
+        call    set_direction
 
         jmp     main.init_board_end
 
@@ -116,9 +125,12 @@ game_loop:
         call    draw_block
 
         lea     rdi, [rsp + Board]
+        call    update_snake
+
+        lea     rdi, [rsp + Board]
         call    draw_snake
 
-        mov     rdi, 300
+        mov     rdi, 100
         call    SDL_Delay
 
         mov     rdi, qword [rsp + Board.renderer]
@@ -150,8 +162,8 @@ handle_events_loop:
         cmp     r10d, [SDL_QUIT] ; if quit is pressed
         je      game_loop_end
 
-	; cmp	r10d, [SDL_KEYDOWN] 
-	; je	handle_keypress	
+	cmp	r10d, [SDL_KEYDOWN] 
+	je	handle_keypress	
 
         jmp     handle_events_loop
 
@@ -166,31 +178,23 @@ handle_error:
 handle_keypress:
         mov     r10d, [rsp + Board.size + 16 + 8 + SDL_Event.sym]
         cmp     r10d, [SDLK_UP]
-        mov     eax, [RED]
-        je      .set_colour
+        mov     eax, 1
+        je      .end
         cmp     r10d, [SDLK_DOWN]
-        mov     eax, [GREEN]
-        je      .set_colour
+        mov     eax, 2
+        je      .end
         cmp     r10d, [SDLK_LEFT]
-        mov     eax, [BLUE]
-        je      .set_colour
+        mov     eax, 3
+        je      .end
         cmp     r10d, [SDLK_RIGHT]
-        mov     eax, [YELLOW]
-        je      .set_colour
-        mov     eax, 0x808080ff
-        .set_colour:
+        mov     eax, 4
+        je      .end
+        mov     eax, 0
+        .end:
 
-
-show_color:	
-	mov	rdi, r13 ; renderer
-	movzx	r8d, al ; a
-	shr	rax, 8
-	movzx	ecx, al ; b
-	shr	rax, 8
-	movzx	edx, al; r
-	shr	rax, 8
-	movzx	rsi, al; g
-	call	SDL_SetRenderDrawColor
+        lea     rdi, [rsp + Board]
+        mov     esi, eax
+        call    set_direction
 	jmp 	game_loop.render_present
 
 ; function to create the food from random numbers
