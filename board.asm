@@ -7,6 +7,7 @@ global  draw_snake
 global  init_snake
 global  print_snake
 global  set_direction
+global  update_score_texture
 global  update_food
 global  update_snake
 
@@ -93,6 +94,38 @@ create_food:
         pop     r13
         pop     r12
         ret
+
+; rdi Board *
+update_score_texture:
+        push    rbp
+        push    r12
+        sub     rsp, 8
+        ; mov     rbp, rsp
+
+        mov     r12, rdi
+        ; format the string
+        lea     rdi, qword [r12 + Board.score_buffer]
+        mov     esi, 16
+        mov     rdx, score_text 
+        mov     ecx, dword [r12 + Board.score]
+        call    SDL_snprintf
+
+        ; create the text surface
+        mov     rdi, qword [r12 + Board.font]
+        lea     rsi, qword [r12 + Board.score_buffer]
+        ; mov     rsi, score_text
+        mov     edx, 0xffffffff
+        call    TTF_RenderText_Blended
+
+        mov     rdi, qword [r12 + Board.renderer]
+        mov     rsi, rax
+        call    SDL_CreateTextureFromSurface
+        mov     qword [r12 + Board.score_texture], rax
+
+        add     rsp, 8
+        pop     r12
+        pop     rbp
+        ret        
 
 ; rdi Board *
 update_food:
@@ -289,6 +322,8 @@ draw_food:
 
 
         section .rodata
+score_text: 
+        dd      "Score: %d"
 print_snake_str:
         db      "(%d, %d),", 0xa
 

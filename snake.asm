@@ -8,6 +8,7 @@ extern  draw_snake
 extern  init_snake
 extern  print_snake
 extern  set_direction
+extern  update_score_texture
 extern  update_food
 extern  update_snake
 
@@ -72,24 +73,9 @@ init_board:
         mov     esi, TTF_HINTING_LIGHT_SUBPIXEL
         call    TTF_SetFontHinting
 
+        lea     rdi, [rsp + Board]
+        call    update_score_texture
 
-        ; create the text surface
-        ; format the string
-        lea     rdi, qword [rsp + Board.score_buffer]
-        mov     rsi, 16
-        mov     rdx, score_text 
-        mov     rcx, qword [rsp + Board.score]
-        call    SDL_snprintf
-
-        mov     rdi, qword [rsp + Board.font]
-        mov     rsi, score_text
-        mov     edx, 0xffffffff
-        call    TTF_RenderText_Blended
-
-        mov     rdi, qword [rsp + Board.renderer]
-        mov     rsi, rax
-        call    SDL_CreateTextureFromSurface
-        mov     qword [rsp + Board.score_texture], rax
         jmp     main.init_board_end
 
 update_game:
@@ -323,8 +309,6 @@ DEFAULT_FONT:
         db      "font.ttf", 0
 FONT_SIZE:
         dd      33
-score_text: 
-        dd      "Score: %d"
 window_title:
         db      "This is the assembly code", 0
 hello:  db      "Hello world", 0xa, 0
