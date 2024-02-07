@@ -129,6 +129,9 @@ update_score_texture:
 
 ; rdi Board *
 update_food:
+        push    rbp
+        mov     rbp, rsp
+        push    r12
         ; check if food colides with the snake head
         ; if yes update food location and increment score
         mov     rsi, qword [rdi + Board.snake + Snake.head]
@@ -139,9 +142,16 @@ update_food:
 
         add     dword [rdi + Board.score], 1
         add     dword [rdi + Board.snake + Snake.length], 1
+
+        mov     r12, rdi
+        call    update_score_texture
+        mov     rdi, r12
         call    create_food
 
+
         .end:
+        pop     r12
+        leave
         ret
 
 ; rdi Board *
