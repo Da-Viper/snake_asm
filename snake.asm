@@ -99,6 +99,7 @@ main:
         sub     rsp, 64 ; create stack space for SDL_Event(56)
         sub     rsp, 784 ; space for the board
  
+
 	; seed rand
         mov     rdi, 0x0
         call    time
@@ -120,14 +121,13 @@ main:
 
 
 	; initalize SDL event struct
-        mov     qword [rsp + Board.size + 16 + 8], 0
-        mov     qword [rsp + Board.size + 16 + 16], 0
-        mov     qword [rsp + Board.size + 16 + 24], 0
-        mov     qword [rsp + Board.size + 16 + 32], 0
-        mov     qword [rsp + Board.size + 16 + 40], 0
-        mov     qword [rsp + Board.size + 16 + 48], 0
-        mov     qword [rsp + Board.size + 16 + 56], 0
-
+        mov     qword [rsp + Board.size + 8], 0
+        mov     qword [rsp + Board.size + 16], 0
+        mov     qword [rsp + Board.size + 24], 0
+        mov     qword [rsp + Board.size + 32], 0
+        mov     qword [rsp + Board.size + 40], 0
+        mov     qword [rsp + Board.size + 48], 0
+        mov     qword [rsp + Board.size + 56], 0
 
         lea     rdi, qword [rsp + Board]
         call    init_snake
@@ -192,12 +192,12 @@ main_function_end:
         ret
 
 handle_events_loop:
-        lea     rdi, [rsp + Board.size + 16 + 8]
+        lea     rdi, [rsp + Board.size + 8]
         call    SDL_PollEvent ; poll events
         cmp     eax, 0
         jz      game_loop.handle_events_loop_end
 
-        mov     r10d, [rsp + Board.size + 16 + 8]
+        mov     r10d, [rsp + Board.size + 8]
         cmp     r10d, [SDL_QUIT] ; if quit is pressed
         je      game_loop_end
 
@@ -215,7 +215,7 @@ handle_error:
         jmp     main_function_end
 
 handle_keypress:
-        mov     r10d, [rsp + Board.size + 16 + 8 + SDL_Event.sym]
+        mov     r10d, [rsp + Board.size + 8 + SDL_Event.sym]
         cmp     r10d, [SDLK_UP]
         mov     eax, 1
         je      .end

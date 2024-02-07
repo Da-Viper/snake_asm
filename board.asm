@@ -29,7 +29,6 @@ init_snake:
         cmp     ecx, 3
         je      .end_init_snake
 
-        lea     r13, dword [rcx + Point.size]
         sub     eax, 1
         mov     dword [rdi + Board.snake + Snake.tail + (rcx * Point.size) + Point.x], eax
         mov     dword [rdi + Board.snake + Snake.tail + (rcx * Point.size) + Point.y], edx
