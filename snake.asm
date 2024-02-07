@@ -74,6 +74,13 @@ init_board:
 
 
         ; create the text surface
+        ; format the string
+        lea     rdi, qword [rsp + Board.score_buffer]
+        mov     rsi, 16
+        mov     rdx, score_text 
+        mov     rcx, qword [rsp + Board.score]
+        call    SDL_snprintf
+
         mov     rdi, qword [rsp + Board.font]
         mov     rsi, score_text
         mov     edx, 0xffffffff
@@ -178,6 +185,9 @@ game_loop:
 game_loop_end:
 
 sdl_cleanup:
+        mov     rdi, qword [rsp + Board.font]
+        call    TTF_CloseFont
+        call    TTF_Quit
         mov     rdi, qword [rsp + Board.window]
         call    SDL_DestroyWindow
         call    SDL_Quit
@@ -199,7 +209,7 @@ handle_events_loop:
 
         mov     r10d, [rsp + Board.size + 8]
         cmp     r10d, [SDL_QUIT] ; if quit is pressed
-        je      game_loop_end
+        je      sdl_cleanup
 
 	cmp	r10d, [SDL_KEYDOWN] 
 	je	handle_keypress	
