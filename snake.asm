@@ -53,8 +53,36 @@ init_board:
         mov     esi, 4
         call    set_direction
 
+        ; set score
         mov     dword [rsp + Board.score], 0
+        
+        ; init score font
+        mov     rdi, DEFAULT_FONT
+        mov     esi, dword [FONT_SIZE]
+        call    TTF_OpenFont
+        cmp     rax, 0x0
+        je      handle_error
+        mov     qword [rsp + Board.font], rax 
 
+        mov     rdi, qword [rsp + Board.font]
+        mov     esi, TTF_STYLE_NORMAL
+        call    TTF_SetFontStyle
+
+        mov     rdi, qword [rsp + Board.font]
+        mov     esi, TTF_HINTING_LIGHT_SUBPIXEL
+        call    TTF_SetFontHinting
+
+
+        ; create the text surface
+        mov     rdi, qword [rsp + Board.font]
+        mov     rsi, score_text
+        mov     edx, 0xffffffff
+        call    TTF_RenderText_Blended
+
+        mov     rdi, qword [rsp + Board.renderer]
+        mov     rsi, rax
+        call    SDL_CreateTextureFromSurface
+        mov     qword [rsp + Board.score_texture], rax
         jmp     main.init_board_end
 
 update_game:
@@ -80,6 +108,11 @@ main:
 	; init SDL 
         mov     edi, [SDL_INIT_VIDEO]
         call    SDL_Init
+
+        ; init TTF
+        call    TTF_Init
+        test    eax, eax
+        jl      handle_error 
 
 	; init board
         jmp     init_board
@@ -124,6 +157,17 @@ game_loop:
 
         lea     rdi, [rsp + Board]
         call    update_state
+
+        ; show score
+        mov     rdi, qword [rsp + Board.renderer] 
+        mov     rsi, qword [rsp + Board.score_texture]
+        mov     dword [rsp + 800 + SDL_Rect.x], 10
+        mov     dword [rsp + 800 +SDL_Rect.y], 10
+        mov     dword [rsp + 800 + SDL_Rect.w], 101
+        mov     dword [rsp + 800 + SDL_Rect.h], 30
+        mov     rdx, 0x0
+        lea     rcx, [rsp + 800]
+        call    SDL_RenderCopy
 
         mov     rdi, 100
         call    SDL_Delay
@@ -265,12 +309,19 @@ window_width:
         dd      800
 window_height:
         dd      600
+DEFAULT_FONT:
+        db      "font.ttf", 0
+FONT_SIZE:
+        dd      33
+score_text: 
+        dd      "Score: %d"
 window_title:
         db      "This is the assembly code", 0
 hello:  db      "Hello world", 0xa, 0
 str_error:
-        db      "Could not create sdl window: %s", 0xa, 0
+        db      "SDL Error: %s", 0xa, 0
 str_create_point:
         db      "Creating point at %d, %d", 0xa, 0
 str_draw_point:
         db      "Drawing point at %d, %d", 0xa, 0
+
