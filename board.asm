@@ -5,6 +5,7 @@ global  draw_food
 global  draw_block
 global  draw_snake
 global  init_snake
+global  has_collision
 global  print_snake
 global  set_direction
 global  update_score_texture
@@ -68,6 +69,36 @@ print_snake:
 
         pop     rbp
         ret
+
+
+; rdi: Board *
+has_collision:
+        ; collides with wall
+        ; if head.x
+        ; comp head.x to 0 
+        mov     esi, dword [rdi + Board.snake + Snake.head.x]
+        cmp     esi, 0 ; less than zero
+        jl      .true
+
+        mov     edx, dword [rdi + Board.width]
+        cmp     esi, edx ; greater than the board width
+        jge      .true
+
+        mov     esi, dword [rdi + Board.snake + Snake.head.y]
+        cmp     esi, 0 ; height less than zero
+        jl      .true
+
+        mov     edx, dword [rdi + Board.height]
+        cmp     esi, edx ; greater than the board height
+        jge      .true
+        
+        xor     eax, eax
+        ret
+        
+        .true:
+        mov     eax, 1
+        ret
+
 
 ; function to create the food from random numbers
 ; rdi: Board *

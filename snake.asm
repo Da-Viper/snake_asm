@@ -11,6 +11,7 @@ extern  set_direction
 extern  update_score_texture
 extern  update_food
 extern  update_snake
+extern  has_collision
 
 
 global  main
@@ -150,6 +151,8 @@ game_loop:
 
         lea     rdi, [rsp + Board]
         call    update_state
+        cmp     eax, 1 ; game over (collision happens)
+        je      sdl_cleanup
 
         ; show score
         mov     rdi, qword [rsp + Board.renderer] 
@@ -240,6 +243,10 @@ update_state:
         mov     r12, rdi
 
         ; check collision
+        lea     rdi, [r12 + Board]
+        call    has_collision
+        cmp     eax, 1
+        je      .end
         ; collides with the walls 
         ; collides with itself
 
@@ -265,8 +272,8 @@ update_state:
         lea     rdi, [r12 + Board]
         call    draw_snake
 
+        .end
         pop     r12
-
         leave
         ret
 
