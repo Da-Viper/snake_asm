@@ -79,6 +79,11 @@ endstruc
 %define width 40
 %define height 30
 
+%define BLUE 0x0000ffff
+%define RED 0xff0000ff
+%define GREEN 0x00ff00ff
+%define YELLOW 0xffff00ff
+
 extern SDL_Init
 extern SDL_CreateWindow
 extern SDL_CreateRenderer

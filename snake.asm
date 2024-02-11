@@ -258,15 +258,9 @@ update_state:
         lea     rdi, [r12 + Board]
         call    update_food
 
-
-
-
         ; draw food
-        mov     rdi, qword [r12 + Board.renderer]
-        mov     rsi, [r12 + Board.food]
-        mov     edx, BLOCK_SIZE
-        mov     ecx, 0x0000ffff
-        call    draw_block
+        lea     rdi, [r12 + Board]
+        call    draw_food
 
         ; draw snake 
         lea     rdi, [r12 + Board]
@@ -281,10 +275,6 @@ update_state:
         section .rodata
 
 ; GAME Constants
-RED:    dq      0xff0000ff
-GREEN:  dq      0x00ff00ff
-BLUE:   dq      0x0000ffff
-YELLOW: dq      0xffff00ff
 window_width:
         dd      800
 window_height:

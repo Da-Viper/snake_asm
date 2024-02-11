@@ -318,48 +318,12 @@ set_direction:
 
 ; function to draw the food
 ; rdi: Board * 
-; esi: block_size
 draw_food:
-        push    rbp
-        mov     rbp, rsp
-        sub     rsp, SDL_Rect.size
-
-        mov     r12, rdi
-        push    rsi
-
-        mov     rdi, qword [r12 + Board.renderer]
-        xor     esi, esi
-        xor     edx, edx
-        mov     ECX, 255
-        mov     r8d, 0xff
-        call    SDL_SetRenderDrawColor
-
-        mov     r10d, dword [r12 + Board.food.x]
-        mov     r11d, dword [r12 + Board.food.y]
-
-        pop     rsi
-        imul    r10d, esi
-        imul    r11d, esi
-
-        mov     dword [rsp + SDL_Rect.x], r10d
-        mov     dword [rsp + SDL_Rect.y], r11d
-        mov     [rsp + SDL_Rect.w], esi
-        mov     [rsp + SDL_Rect.h], esi
-
-        mov     rdi, qword [r12 + Board.renderer]
-        lea     rsi, qword [rsp]
-        ; call SDL_RenderDrawRect
-        call    SDL_RenderFillRect
-
-        ; mov     rdi, str_draw_point
-        ; mov	esi, dword [ r12 + Board.food.x]
-        ; mov	edx, dword [ r12 + Board.food.y]
-        ; xor	ecx, ecx
-        ; call	printf
-
-        add     rsp, SDL_Rect.size
-        leave
-        ret
+        mov     rsi, [rdi + Board.food]
+        mov     rdi, qword [rdi + Board.renderer]
+        mov     edx, BLOCK_SIZE
+        mov     ecx, BLUE
+        jmp     draw_block
 
 
         section .rodata
