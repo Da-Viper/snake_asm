@@ -84,6 +84,9 @@ endstruc
 %define BLUE 0x0000ffff
 %define RED 0xff0000ff
 %define GREEN 0x00ff00ff
+%define PASTEL_BLUE 0xa7c7e7
+%define PASTEL_GREEN 0x77dd77ff
+%define PASTEL_YELLOW 0xb7b76bff
 %define YELLOW 0xffff00ff
 
 extern SDL_Init

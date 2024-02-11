@@ -295,7 +295,7 @@ DEFAULT_FONT:
 FONT_SIZE:
         dd      33
 window_title:
-        db      "This is the assembly code", 0
+        db      "Snake ASM :)", 0
 hello:  db      "Hello world", 0xa, 0
 str_error:
         db      "SDL Error: %s", 0xa, 0

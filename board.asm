@@ -348,7 +348,7 @@ draw_snake:
         mov     rdi, [r14 + Board.renderer]
         mov     rsi, [r12 + (r15 * Point.size)]
         mov     edx, 20
-        mov     ecx, 0x008080ff
+        mov     ecx, PASTEL_GREEN
         call    draw_block
 
         add     r15d, 1
@@ -365,7 +365,7 @@ draw_snake:
         mov     r12, rsi
         mov     rdi, [r14 + Board.renderer]
         mov     edx, BLOCK_SIZE
-        mov     ecx, 0xffff00ff
+        mov     ecx, GREEN
         call    draw_block
 
         mov     edx, BLOCK_SIZE
@@ -381,11 +381,8 @@ draw_snake:
 
         mov     rdi, [r14 + Board.renderer]
         mov     edx, BLOCK_SIZE_SMALL
-        mov     ecx, 0xff0000ff
+        mov     ecx, PASTEL_BLUE
         call    draw_block_noscale
-
-
-
 
         pop     r12
         pop     r13
@@ -418,7 +415,7 @@ draw_food:
         mov     rsi, [rdi + Board.food]
         mov     rdi, qword [rdi + Board.renderer]
         mov     edx, BLOCK_SIZE
-        mov     ecx, BLUE
+        mov     ecx, YELLOW
         jmp     draw_block
 
 
