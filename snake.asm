@@ -18,19 +18,19 @@ global  main
 init_board:
 	; init the window and renderer
 	; set width and height
-        mov     r10d, [width]
+        mov     r10d, width
         mov     dword [rsp + Board.width], r10d
-        mov     r11d, [height]
+        mov     r11d, height
         mov     dword [rsp + Board.height], r11d
 
 	; create window
-        mov     eax, [BLOCK_SIZE]
+        mov     eax, BLOCK_SIZE
         imul    r10d, eax ; scale by block size
         imul    r11d, eax
 
         mov     edi, window_title
-        mov     esi, dword [SDL_WINDOWPOS_CENTERED]
-        mov     edx, dword [SDL_WINDOWPOS_CENTERED]
+        mov     esi, dword SDL_WINDOWPOS_CENTERED
+        mov     edx, dword SDL_WINDOWPOS_CENTERED
         mov     ecx, r10d
         mov     r8d, r11d
         mov     r9d, 0
@@ -101,7 +101,7 @@ main:
         call    srand
 
 	; init SDL 
-        mov     edi, [SDL_INIT_VIDEO]
+        mov     edi, SDL_INIT_VIDEO
         call    SDL_Init
 
         ; init TTF
@@ -197,10 +197,10 @@ handle_events_loop:
         jz      game_loop.handle_events_loop_end
 
         mov     r10d, [rsp + Board.size + 8]
-        cmp     r10d, [SDL_QUIT] ; if quit is pressed
+        cmp     r10d, SDL_QUIT ; if quit is pressed
         je      sdl_cleanup
 
-	cmp	r10d, [SDL_KEYDOWN] 
+	cmp	r10d, SDL_KEYDOWN 
 	je	handle_keypress	
 
         jmp     handle_events_loop
@@ -215,16 +215,16 @@ handle_error:
 
 handle_keypress:
         mov     r10d, [rsp + Board.size + 8 + SDL_Event.sym]
-        cmp     r10d, [SDLK_UP]
+        cmp     r10d, SDLK_UP
         mov     eax, 1
         je      .end
-        cmp     r10d, [SDLK_DOWN]
+        cmp     r10d, SDLK_DOWN
         mov     eax, 2
         je      .end
-        cmp     r10d, [SDLK_LEFT]
+        cmp     r10d, SDLK_LEFT
         mov     eax, 3
         je      .end
-        cmp     r10d, [SDLK_RIGHT]
+        cmp     r10d, SDLK_RIGHT
         mov     eax, 4
         je      .end
         mov     eax, 0
@@ -264,7 +264,7 @@ update_state:
         ; draw food
         mov     rdi, qword [r12 + Board.renderer]
         mov     rsi, [r12 + Board.food]
-        mov     edx, [BLOCK_SIZE]
+        mov     edx, BLOCK_SIZE
         mov     ecx, 0x0000ffff
         call    draw_block
 
@@ -272,42 +272,19 @@ update_state:
         lea     rdi, [r12 + Board]
         call    draw_snake
 
-        .end
+        .end:
         pop     r12
         leave
         ret
 
 ; ---- [ SECTION RODATA ] ----
         section .rodata
-;SDL Constants
-SDL_INIT_VIDEO:
-        dd      0x000020
-SDL_WINDOWPOS_CENTERED:
-        dd      0x2FFF0000
-SDL_QUIT:
-        dd      0x100
-SDLK_RIGHT:
-        dd      0x4000004f
-SDLK_LEFT:
-        dd      0x40000050
-SDLK_DOWN:
-        dd      0x40000051
-SDLK_UP:
-        dd      0x40000052
-SDL_KEYDOWN:
-        dd      0x300
-SDL_WINDOW_ALLOW_HIGIDPI:
-        dd      0x2000
 
 ; GAME Constants
-BLOCK_SIZE:
-        dd      20
 RED:    dq      0xff0000ff
 GREEN:  dq      0x00ff00ff
 BLUE:   dq      0x0000ffff
 YELLOW: dq      0xffff00ff
-width:  dd      40
-height: dd      30
 window_width:
         dd      800
 window_height:
