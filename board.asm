@@ -76,6 +76,7 @@ print_snake:
 
 ; rdi: Board *
 has_collision:
+        push    rbx ; counter
         ; collides with wall
         ; if head.x
         ; comp head.x to 0 
@@ -94,11 +95,30 @@ has_collision:
         mov     edx, dword [rdi + Board.height]
         cmp     esi, edx ; greater than the board height
         jge      .true
+
+        ; collides with tail
+        mov     rsi, qword [rdi + Board.snake + Snake.head]
+        mov     edx, dword [rdi + Board.snake + Snake.length]
+        mov     r8, qword [rdi + Board.snake + Snake.tail] 
+
+        xor     rbx, rbx
+        .loop:
+        cmp     rbx, rdx
+        je      .loop_end
+
+        mov     rcx, qword [r8 + (rbx * Point.size)]
+        cmp     rcx, rsi
+        je      .true
+        add     rbx, 1
+        jmp     .loop
         
+        .loop_end:
+        pop     rbx
         xor     eax, eax
         ret
         
         .true:
+        pop     rbx
         mov     eax, 1
         ret
 
