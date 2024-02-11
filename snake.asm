@@ -28,7 +28,7 @@ init_board:
         imul    r10d, eax ; scale by block size
         imul    r11d, eax
 
-        mov     edi, window_title
+        lea     rdi, [window_title]
         mov     esi, dword SDL_WINDOWPOS_CENTERED
         mov     edx, dword SDL_WINDOWPOS_CENTERED
         mov     ecx, r10d
@@ -62,8 +62,8 @@ init_board:
         mov     dword [rsp + Board.score], 0
         
         ; init score font
-        mov     rdi, DEFAULT_FONT
-        mov     esi, dword [FONT_SIZE]
+        lea     rdi, [DEFAULT_FONT]
+        mov     esi, FONT_SIZE
         call    TTF_OpenFont
         cmp     rax, 0x0
         je      handle_error
@@ -212,7 +212,7 @@ handle_events_loop:
 handle_error:
         call    SDL_GetError
         mov     rsi, rax
-        mov     edi, str_error
+        lea     rdi, [str_error]
         call    printf
         jmp     main_function_end
 
@@ -284,23 +284,13 @@ snake_tail: dd  SNAKE_MAX_LENGTH
 
 ; ---- [ SECTION RODATA ] ----
         section .rodata
-
-; GAME Constants
-window_width:
-        dd      800
-window_height:
-        dd      600
 DEFAULT_FONT:
         db      "font.ttf", 0
-FONT_SIZE:
-        dd      33
 window_title:
         db      "Snake ASM :)", 0
-hello:  db      "Hello world", 0xa, 0
 str_error:
         db      "SDL Error: %s", 0xa, 0
 str_create_point:
         db      "Creating point at %d, %d", 0xa, 0
 str_draw_point:
         db      "Drawing point at %d, %d", 0xa, 0
-

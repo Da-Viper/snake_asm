@@ -59,7 +59,7 @@ print_snake:
         je      .end_loop
 
 
-        mov     rdi, print_snake_str
+        lea     rdi, [print_snake_str]
         mov     r8, qword [r12 + Board.snake + Snake.tail]
         mov     esi, dword [r8 + (r13 * Point.size) + Point.x]
         mov     edx, dword [r8 + (r13 * Point.size) + Point.y]
@@ -160,14 +160,13 @@ update_score_texture:
         ; format the string
         lea     rdi, qword [r12 + Board.score_buffer]
         mov     esi, 16
-        mov     rdx, score_text 
+        lea     rdx, [score_text]
         mov     ecx, dword [r12 + Board.score]
         call    SDL_snprintf
 
         ; create the text surface
         mov     rdi, qword [r12 + Board.font]
         lea     rsi, qword [r12 + Board.score_buffer]
-        ; mov     rsi, score_text
         mov     edx, 0xffffffff
         call    TTF_RenderText_Blended
 

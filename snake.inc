@@ -79,6 +79,7 @@ endstruc
 %define BLOCK_SIZE_SMALL 12
 %define width 40
 %define height 30
+%define FONT_SIZE 33
 %define SNAKE_MAX_LENGTH width * height
 
 %define BLUE 0x0000ffff
