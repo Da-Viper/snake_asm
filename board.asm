@@ -27,13 +27,15 @@ init_snake:
 
         ; set the tail moving left 
         mov     ecx, 0
+        ; load the body address
+        mov     r8, qword [rdi + Board.snake + Snake.tail]
         .set_tail:
         cmp     ecx, 3
         je      .end_init_snake
 
         sub     eax, 1
-        mov     dword [rdi + Board.snake + Snake.tail + (rcx * Point.size) + Point.x], eax
-        mov     dword [rdi + Board.snake + Snake.tail + (rcx * Point.size) + Point.y], edx
+        mov     dword [r8 + (rcx * Point.size) + Point.x], eax
+        mov     dword [r8 + (rcx * Point.size) + Point.y], edx
 
         add     ecx, 1
         jmp     .set_tail
@@ -58,8 +60,9 @@ print_snake:
 
 
         mov     rdi, print_snake_str
-        mov     esi, dword [r12 + Board.snake + Snake.tail + (r13 * Point.size) + Point.x]
-        mov     edx, dword [r12 + Board.snake + Snake.tail + (r13 * Point.size) + Point.y]
+        mov     r8, qword [r12 + Board.snake + Snake.tail]
+        mov     esi, dword [r8 + (r13 * Point.size) + Point.x]
+        mov     edx, dword [r8 + (r13 * Point.size) + Point.y]
         xor     rcx, rcx
         call    printf
 
@@ -189,18 +192,23 @@ update_food:
 update_snake:
         mov     rsi, qword [rdi + Board.direction]
         mov     edx, dword [rdi + Board.snake + Snake.length] ; size
-        sub     edx, 1
+        sub     edx, 2
+        mov     r8, qword [rdi + Board.snake + Snake.tail]
 
         .loop:
         cmp     edx, 0
         jl      .loop_end
 
-        mov     rcx, qword [rdi + Board.snake + Snake.head + (rdx * Point.size) ] ; save the current
-        mov     qword [rdi + Board.snake + Snake.head + ((rdx + 1)  * Point.size) ], rcx ; move to next
+        mov     rcx, qword [r8 + (rdx * Point.size) ] ; save the current
+        mov     qword [r8 + ((rdx + 1)  * Point.size) ], rcx ; move to next
 
         sub     edx, 1
         jmp     .loop
         .loop_end:
+
+        ; move head to start of tail
+        mov     rcx, qword [rdi + Board.snake + Snake.head] 
+        mov     qword [r8], rcx 
 
         add     dword [rdi + Board.snake + Snake.head.x], esi
         shr     rsi, 32
@@ -259,10 +267,12 @@ draw_snake:
         push    r15
         push    r14
         push    r13
+        push    r12 ; snake tail
 
+        xor     r15, r15
         mov     r14, rdi
         mov     r13d, dword [r14 + Board.snake + Snake.length]
-        xor     r15, r15
+        mov     r12, qword [r14 + Board.snake + Snake.tail]
 
 
         ; draw tail
@@ -271,7 +281,7 @@ draw_snake:
         je      .end_loop
 
         mov     rdi, [r14 + Board.renderer]
-        mov     rsi, [r14 + Board.snake + Snake.tail + (r15 * Point.size)]
+        mov     rsi, [r12 + (r15 * Point.size)]
         mov     edx, 20
         mov     ecx, 0x008080ff
         call    draw_block
@@ -280,8 +290,8 @@ draw_snake:
         jmp     .loop
         .end_loop:
 
-        mov     rsi, qword [r14 + Board.snake + Snake.tail + (0 * Point.size)]
-        mov     edx, dword [r14 + Board.snake + Snake.tail + Point.y]
+        mov     rsi, qword [r12 + (0 * Point.size)]
+        mov     edx, dword [r12 + Point.y]
         mov     rdi, print_snake_str
         call    printf
 
@@ -292,6 +302,7 @@ draw_snake:
         mov     ecx, 0xffff00ff
         call    draw_block
 
+        pop     r12
         pop     r13
         pop     r14
         pop     r15

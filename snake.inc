@@ -29,7 +29,7 @@ struc Snake
     .head:
     .head.x: resd 1
     .head.y: resd 1
-    .tail: resd 20
+    .tail: resq 1
     .length: resd 1
     .size:
 endstruc
@@ -78,6 +78,7 @@ endstruc
 %define BLOCK_SIZE 20
 %define width 40
 %define height 30
+%define SNAKE_MAX_LENGTH width * height
 
 %define BLUE 0x0000ffff
 %define RED 0xff0000ff

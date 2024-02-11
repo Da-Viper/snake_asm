@@ -48,6 +48,9 @@ init_board:
         cmp     rax, 0x0
         je      handle_error
 
+        ; init  snake 
+        lea     rax, [snake_tail]
+        mov     qword [rsp + Board.snake + Snake.tail], rax
         ; set direction right
         ; mov     dword [rsp + Board.direction.x], 1
         ; mov     dword [rsp + Board.direction.y], 0
@@ -270,6 +273,14 @@ update_state:
         pop     r12
         leave
         ret
+
+
+
+; ---- [ SECTION DATA ] ----
+        section .data
+snake_tail: dd  SNAKE_MAX_LENGTH
+
+
 
 ; ---- [ SECTION RODATA ] ----
         section .rodata
