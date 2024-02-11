@@ -282,6 +282,51 @@ draw_block:
         leave
         ret
 
+; rdi   SDL_Renderer *
+; rsi   Point
+; rdx   block_size
+; rcx   SDL_Color
+draw_block_noscale:
+        push    rbp
+        mov     rbp, rsp 
+        push    r12
+        push    rdx
+        push    rsi
+
+        mov     r12, rdi
+        mov     rax, rcx
+        mov     r10, rax
+        shr     rax, 16
+        movzx   esi, ah
+        movzx   edx, al   
+        movzx   r8d, r10b
+        shr     r10d, 8
+        movzx   ecx, r10b
+        call    SDL_SetRenderDrawColor
+
+        pop     rsi
+        mov     r10d, esi
+        shr     rsi, 32
+        mov     r11d, esi
+
+        pop     rdx
+
+        sub     rsp, SDL_Rect.size
+        mov     dword [rsp + SDL_Rect.x], r10d
+        mov     dword [rsp + SDL_Rect.y], r11d
+        mov     dword [rsp + SDL_Rect.w], edx
+        mov     dword [rsp + SDL_Rect.h], edx
+
+        mov     rdi, r12
+        lea     rsi, [rsp + SDL_Rect]
+        call    SDL_RenderFillRect
+
+        add     rsp, SDL_Rect.size
+        pop     r12
+        leave
+        ret
+
+
 ; rdi Board *
 draw_snake:
         push    r15
@@ -316,11 +361,31 @@ draw_snake:
         call    printf
 
         ; draw snake head 
-        mov     rdi, [r14 + Board.renderer]
         mov     rsi, [r14 + Board.snake + Snake.head]
-        mov     edx, 20
+        mov     r12, rsi
+        mov     rdi, [r14 + Board.renderer]
+        mov     edx, BLOCK_SIZE
         mov     ecx, 0xffff00ff
         call    draw_block
+
+        mov     edx, BLOCK_SIZE
+        mov     rsi, r12
+        shr     rsi, 32
+        imul    esi, edx
+        add     rsi, 4
+        shl     rsi, 32
+
+        imul    r12d, edx
+        add     r12d, 4
+        or      rsi, r12
+
+        mov     rdi, [r14 + Board.renderer]
+        mov     edx, BLOCK_SIZE_SMALL
+        mov     ecx, 0xff0000ff
+        call    draw_block_noscale
+
+
+
 
         pop     r12
         pop     r13

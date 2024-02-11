@@ -76,6 +76,7 @@ endstruc
 
 ; GAME Constants 
 %define BLOCK_SIZE 20
+%define BLOCK_SIZE_SMALL 12
 %define width 40
 %define height 30
 %define SNAKE_MAX_LENGTH width * height
