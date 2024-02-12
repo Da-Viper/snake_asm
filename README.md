@@ -3,6 +3,8 @@
 
 An Implementation of a snake game using x86_64 intel assembly for linux
 
+![Game Screen shot](res/screenshot.png)
+
 ### Requirements 
 1. SDL 
 
