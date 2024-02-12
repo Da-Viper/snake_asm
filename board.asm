@@ -397,9 +397,23 @@ set_direction:
         cmp     esi, 1
         jl      .end
 
+        xor     ebx, ebx
+        xor     edx, edx
         sub     esi, 1
         mov     edx, dword [snake_direction + (rsi * Point.size) + Point.x]
         mov     ecx, dword [snake_direction + (rsi * Point.size) + Point.y]
+
+        mov     r8d, [rdi + Board.direction.x]
+        mov     r10d, [rdi + Board.direction.y]
+
+        neg     r8d
+        cmp     r8d, edx
+        je      .end
+
+        neg     r10d
+        cmp     r10d, ecx
+        je      .end
+
         mov     [rdi + Board.direction.x], edx
         mov     [rdi + Board.direction.y], ecx
 
